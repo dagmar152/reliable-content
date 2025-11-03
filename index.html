@@ -169,56 +169,13 @@
             const deepLink = `fireapp://enablebanking/callback?code=${encodeURIComponent(code)}`;
             console.log('Deep link URL:', deepLink);
             
-            // For macOS, show manual instructions instead of auto-redirect
-            if (isMac || isMacOS) {
-                console.log('macOS detected - showing manual return instructions');
-                
-                // Copy code to clipboard
-                navigator.clipboard.writeText(code).then(() => {
-                    console.log('Code copied to clipboard');
-                }).catch(err => {
-                    console.log('Could not copy to clipboard:', err);
-                });
-                
-                setTimeout(() => {
-                    container.innerHTML = `
-                        <div class="success-icon">✓</div>
-                        <h1>Authorization Complete!</h1>
-                        <p style="font-size: 1.2rem; margin: 1rem 0;">Please return to the app now.</p>
-                        <div class="instructions">
-                            <p><strong>macOS Note:</strong></p>
-                            <p>The app will automatically detect the authorization.</p>
-                            <p>You can close this browser window.</p>
-                        </div>
-                        <div class="code-display">
-                            <strong>Authorization Code (copied to clipboard):</strong><br>
-                            ${code.substring(0, 40)}...
-                        </div>
-                    `;
-                }, 500);
-                
-                return;
-            }
-            
-            // For iOS/Android, try auto-redirect
             statusElement.textContent = 'Opening app...';
             
-            // Try to open the app using multiple methods
-            let redirectAttempted = false;
+            // Try to open the app immediately
+            console.log('Attempting to open:', deepLink);
+            window.location.href = deepLink;
             
-            // Method 1: Direct window.location assignment (works best on iOS)
-            function attemptRedirect() {
-                if (redirectAttempted) return;
-                redirectAttempted = true;
-                
-                console.log('Attempting to open:', deepLink);
-                window.location.href = deepLink;
-            }
-            
-            // Immediate redirect attempt
-            attemptRedirect();
-            
-            // Method 2: Create invisible iframe (alternative method)
+            // Also try alternative methods
             setTimeout(() => {
                 const iframe = document.createElement('iframe');
                 iframe.style.display = 'none';
@@ -227,7 +184,6 @@
                 console.log('Iframe redirect attempted');
             }, 100);
             
-            // Method 3: Try using a link click (works on some browsers)
             setTimeout(() => {
                 const link = document.createElement('a');
                 link.href = deepLink;
@@ -245,7 +201,7 @@
                     <p>Authorization code received successfully.</p>
                     <div class="instructions">
                         <p><strong>If the app didn't open automatically:</strong></p>
-                        <p>Please return to the app manually.</p>
+                        <p>Please return to the app manually and check for connected accounts.</p>
                     </div>
                     <div class="code-display">
                         <strong>Authorization Code:</strong><br>
@@ -253,11 +209,15 @@
                     </div>
                     <div class="debug-info">
                         <strong>Deep Link:</strong><br>
-                        ${deepLink}
+                        ${deepLink}<br><br>
+                        <strong>If app doesn't open:</strong><br>
+                        1. Make sure the app is running<br>
+                        2. You may need to manually click this link:<br>
+                        <a href="${deepLink}" style="color: #88f; text-decoration: underline;">Open App</a>
                     </div>
                 `;
                 console.log('Fallback UI displayed');
-            }, 3000);
+            }, 2000);
             
             // Log visibility changes (helps debug if page is hidden)
             document.addEventListener('visibilitychange', () => {
