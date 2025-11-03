@@ -1,82 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
+    <title>Enable Banking Redirect</title>
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banking App Authorization</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: #f5f5f5;
         }
         .container {
-            text-align: center;
-            padding: 2rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
+        .loading {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 1rem auto;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .message {
+            margin: 20px 0;
+            font-size: 18px;
+            color: #333;
+        }
         .error {
-            color: #ffcccc;
-            margin-top: 1rem;
+            color: #e74c3c;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="spinner"></div>
-        <h2>Redirecting to Banking App...</h2>
-        <p id="message">Please wait while we complete your authorization.</p>
-        <p id="error" class="error" style="display: none;"></p>
+        <h1>Connecting to Your Bank</h1>
+        <div class="loading"></div>
+        <p class="message">Please wait while we connect to your bank...</p>
+        <p class="message">You will be redirected back to the app shortly.</p>
     </div>
 
     <script>
-        // Extract the authorization code from the URL
+        // Extract authorization code from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const state = urlParams.get('state');
         const error = urlParams.get('error');
 
         if (error) {
-            document.getElementById('message').style.display = 'none';
-            document.getElementById('error').textContent = 'Authorization failed: ' + error;
-            document.getElementById('error').style.display = 'block';
+            // Handle error case
+            document.querySelector('.message').innerHTML = '<span class="error">Authorization failed: ' + error + '</span>';
+            document.querySelector('.loading').style.display = 'none';
         } else if (code) {
-            // Construct app deep link URL
-            const appUrl = `flutterbankingapp://callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state || '')}`;
-            
+            // Success case - redirect to app with authorization code
+            const redirectUrl = 'fireapp://enablebanking/callback?code=' + encodeURIComponent(code);
+
             // Try to open the app
-            window.location.href = appUrl;
-            
-            // Fallback message after a short delay
-            setTimeout(() => {
-                document.getElementById('message').innerHTML = 
-                    'If the app didn\'t open automatically, please return to the Banking App manually.<br><br>' +
-                    '<small>Authorization code: ' + code.substring(0, 20) + '...</small>';
+            window.location.href = redirectUrl;
+
+            // Fallback message
+            setTimeout(function() {
+                document.querySelector('.message').innerHTML = 'Redirecting to app...<br><small>If the app doesn\'t open, please return to the app manually.</small>';
+                document.querySelector('.loading').style.display = 'none';
             }, 2000);
         } else {
-            document.getElementById('message').style.display = 'none';
-            document.getElementById('error').textContent = 'No authorization code received. Please try again.';
-            document.getElementById('error').style.display = 'block';
+            // No code or error - show error
+            document.querySelector('.message').innerHTML = '<span class="error">Invalid authorization response</span>';
+            document.querySelector('.loading').style.display = 'none';
         }
     </script>
 </body>
