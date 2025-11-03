@@ -113,6 +113,11 @@
         (function() {
             console.log('=== Enable Banking Redirect Page Loaded ===');
             console.log('Current URL:', window.location.href);
+            console.log('User Agent:', navigator.userAgent);
+            
+            // Detect if running on macOS
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            const isMacOS = navigator.userAgent.indexOf('Macintosh') > -1;
             
             // Get URL parameters
             const urlParams = new URLSearchParams(window.location.search);
@@ -122,6 +127,7 @@
             const errorDescription = urlParams.get('error_description');
             
             console.log('Parameters:', { code, state, error, errorDescription });
+            console.log('Platform:', { isMac, isMacOS });
             
             const container = document.querySelector('.container');
             const statusElement = document.getElementById('status');
@@ -163,6 +169,38 @@
             const deepLink = `fireapp://enablebanking/callback?code=${encodeURIComponent(code)}`;
             console.log('Deep link URL:', deepLink);
             
+            // For macOS, show manual instructions instead of auto-redirect
+            if (isMac || isMacOS) {
+                console.log('macOS detected - showing manual return instructions');
+                
+                // Copy code to clipboard
+                navigator.clipboard.writeText(code).then(() => {
+                    console.log('Code copied to clipboard');
+                }).catch(err => {
+                    console.log('Could not copy to clipboard:', err);
+                });
+                
+                setTimeout(() => {
+                    container.innerHTML = `
+                        <div class="success-icon">✓</div>
+                        <h1>Authorization Complete!</h1>
+                        <p style="font-size: 1.2rem; margin: 1rem 0;">Please return to the app now.</p>
+                        <div class="instructions">
+                            <p><strong>macOS Note:</strong></p>
+                            <p>The app will automatically detect the authorization.</p>
+                            <p>You can close this browser window.</p>
+                        </div>
+                        <div class="code-display">
+                            <strong>Authorization Code (copied to clipboard):</strong><br>
+                            ${code.substring(0, 40)}...
+                        </div>
+                    `;
+                }, 500);
+                
+                return;
+            }
+            
+            // For iOS/Android, try auto-redirect
             statusElement.textContent = 'Opening app...';
             
             // Try to open the app using multiple methods
