@@ -1,82 +1,99 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Enable Banking Redirect</title>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Authorization Redirect</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
         }
-        .loading {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
             border-radius: 50%;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .message {
-            margin: 20px 0;
-            font-size: 18px;
-            color: #333;
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
         }
-        .error {
-            color: #e74c3c;
-            font-weight: bold;
+        p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Connecting to Your Bank</h1>
-        <div class="loading"></div>
-        <p class="message">Please wait while we connect to your bank...</p>
-        <p class="message">You will be redirected back to the app shortly.</p>
+        <div class="spinner"></div>
+        <h1>Authorization Successful</h1>
+        <p>Redirecting back to the app...</p>
     </div>
 
     <script>
-        // Extract authorization code from URL parameters
+        // Get the full URL including query parameters
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
         const error = urlParams.get('error');
 
-        if (error) {
-            // Handle error case
-            document.querySelector('.message').innerHTML = '<span class="error">Authorization failed: ' + error + '</span>';
-            document.querySelector('.loading').style.display = 'none';
-        } else if (code) {
-            // Success case - redirect to app with authorization code
-            const redirectUrl = 'fireapp://enablebanking/callback?code=' + encodeURIComponent(code);
+        console.log('Redirect page loaded');
+        console.log('Code:', code);
+        console.log('Error:', error);
 
-            // Try to open the app
-            window.location.href = redirectUrl;
-
-            // Fallback message
-            setTimeout(function() {
-                document.querySelector('.message').innerHTML = 'Redirecting to app...<br><small>If the app doesn\'t open, please return to the app manually.</small>';
-                document.querySelector('.loading').style.display = 'none';
+        if (code) {
+            // Build the custom URL scheme with the authorization code
+            const appUrl = `fireapp://enablebanking/callback?code=${encodeURIComponent(code)}`;
+            console.log('Redirecting to:', appUrl);
+            
+            // Attempt to open the app
+            window.location.href = appUrl;
+            
+            // Fallback: show message after a delay
+            setTimeout(() => {
+                document.querySelector('.container').innerHTML = `
+                    <h1>Authorization Complete</h1>
+                    <p>If the app doesn't open automatically, please return to the app manually.</p>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Code: ${code.substring(0, 20)}...</p>
+                `;
             }, 2000);
+        } else if (error) {
+            console.error('Authorization error:', error);
+            document.querySelector('.container').innerHTML = `
+                <h1>Authorization Failed</h1>
+                <p>Error: ${error}</p>
+                <p style="margin-top: 1rem;">Please return to the app and try again.</p>
+            `;
         } else {
-            // No code or error - show error
-            document.querySelector('.message').innerHTML = '<span class="error">Invalid authorization response</span>';
-            document.querySelector('.loading').style.display = 'none';
+            console.error('No code or error in URL');
+            document.querySelector('.container').innerHTML = `
+                <h1>Invalid Response</h1>
+                <p>No authorization code received.</p>
+                <p style="margin-top: 1rem;">Please return to the app and try again.</p>
+            `;
         }
     </script>
 </body>
